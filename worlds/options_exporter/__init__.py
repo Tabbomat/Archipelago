@@ -87,6 +87,12 @@ def export_apworld_options(*args):
                             if cls.__name__ == "Sc2ItemDict" and key == "valid_keys":
                                 continue
 
+                            # There is a typo in alttp menuspeed
+                            if key == "options":
+                                for k, v in value.items():
+                                    if isinstance(v, tuple) and len(v) == 1 and isinstance(v[0], int):
+                                        value[k] = v[0]
+
                             # Only add it if a child class hasn't already overridden it
                             if key not in class_vars:
                                 class_vars[key] = value
