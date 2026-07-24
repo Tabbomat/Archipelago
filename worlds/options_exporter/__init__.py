@@ -79,7 +79,10 @@ def export_apworld_options(*args):
                             # Filter out unnecessary class variables
                             if any(key.startswith(prefix) for prefix in ("option_", "alias_")):
                                 continue
-                            if key in ("name_lookup", "rich_text_doc", "display_name", "auto_display_name"):
+                            if key in ("name_lookup", "rich_text_doc", "display_name", "auto_display_name",
+                                       "verify_item_name", "verify_location_name", "cull_zeroes"):
+                                continue
+                            if key in ("options", "aliases") and value == {}:
                                 continue
 
                             # Only add it if a child class hasn't already overridden it
