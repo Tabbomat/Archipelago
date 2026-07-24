@@ -84,6 +84,8 @@ def export_apworld_options(*args):
                                 continue
                             if key in ("options", "aliases") and value == {}:
                                 continue
+                            if cls.__name__ == "Sc2ItemDict" and key == "valid_keys":
+                                continue
 
                             # Only add it if a child class hasn't already overridden it
                             if key not in class_vars:
