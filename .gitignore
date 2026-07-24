@@ -65,6 +65,7 @@ Output Logs/
 /data/user.kv
 /datapackage
 /datapackage_export.json
+/apworld_options.json
 /custom_worlds
 # stubgen output
 /out/
