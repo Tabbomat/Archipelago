@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import types
 
 from worlds.LauncherComponents import Component, components
 
@@ -64,18 +65,37 @@ def export_apworld_options(*args):
                     if is_removed:
                         continue
 
+                    # Extract relevant class variables
+                    class_vars = {}
+                    for cls in mro:
+                        for key, value in cls.__dict__.items():
+                            # Filter out private attributes
+                            if key.startswith("_"):
+                                continue
+                            # Filter out methods etc
+                            if isinstance(value, (types.FunctionType, property, classmethod, staticmethod)):
+                                continue
+
+                            # Filter out unnecessary class variables
+                            if any(key.startswith(prefix) for prefix in ("option_", "alias_")):
+                                continue
+                            if key in ("name_lookup", "rich_text_doc", "display_name", "auto_display_name"):
+                                continue
+
+                            # Only add it if a child class hasn't already overridden it
+                            if key not in class_vars:
+                                class_vars[key] = value
+                        if cls.__name__ == "Option":
+                            break
+
                     opt_data = {
                         "name": getattr(option, "display_name", name),
-                        "default": option.default,
-                        "visibility": option.visibility,
-                        "supports_weighting": option.supports_weighting,
                         "description": option.__doc__,
                         "parent_classes": parent_classes
                     }
-                    if option.options:
-                        opt_data["options"] = option.options
-                    if option.aliases:
-                        opt_data["aliases"] = option.aliases
+
+                    # add class variables
+                    opt_data.update(class_vars)
 
                     world_options[name] = opt_data
                 except AttributeError:
