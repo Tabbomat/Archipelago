@@ -29,7 +29,6 @@ def export_apworld_options(*args):
     and exports them to a JSON file silently.
     """
     from worlds.AutoWorld import AutoWorldRegister
-    import dataclasses
 
     logging.basicConfig(level=logging.INFO)
     logging.info("Scanning installed APWorlds for options...")
@@ -38,38 +37,53 @@ def export_apworld_options(*args):
 
     # Iterate over all registered worlds
     for world_name, world_class in AutoWorldRegister.world_types.items():
-        if world_name == "Archipelago":
+        if world_class.hidden:
             continue
 
         world_options = {}
 
         # New worlds should use dataclasses for defining options
         if hasattr(world_class, "options_dataclass"):
-            for field in dataclasses.fields(world_class.options_dataclass):
-                opt_class = field.type
+            for name, option in world_class.options_dataclass.type_hints.items():
+                try:
+                    is_removed = False
+                    # Dynamically get the inheritance chain
+                    parent_classes = []
+                    mro = option.mro()
+                    # Skip removed options
+                    if mro[0].__name__ == "Removed":
+                        continue
+                    for cls in mro[1:]:  # Skip index 0 (the class itself)
+                        if cls.__name__ == "Removed":
+                            is_removed = True
+                            break
+                        parent_classes.append(cls.__name__)
+                        if cls.__name__ == "Option":
+                            break  # Stop once we reach the base Option class
 
-                opt_data = {
-                    "type": opt_class.__name__ if hasattr(opt_class, "__name__") else str(opt_class)
-                }
-                if hasattr(opt_class, "default"):
-                    opt_data["default"] = opt_class.default
-                if hasattr(opt_class, "options"):
-                    opt_data["choices"] = opt_class.options
+                    if is_removed:
+                        continue
 
-                world_options[field.name] = opt_data
+                    opt_data = {
+                        "name": getattr(option, "display_name", name),
+                        "default": option.default,
+                        "visibility": option.visibility,
+                        "supports_weighting": option.supports_weighting,
+                        "description": option.__doc__,
+                        "parent_classes": parent_classes
+                    }
+                    if option.options:
+                        opt_data["options"] = option.options
+                    if option.aliases:
+                        opt_data["aliases"] = option.aliases
 
-        # Fallback for worlds using traditional dictionaries
-        elif hasattr(world_class, "options"):
-            for opt_name, opt_class in world_class.options.items():
-                opt_data = {
-                    "type": opt_class.__name__ if hasattr(opt_class, "__name__") else str(opt_class)
-                }
-                if hasattr(opt_class, "default"):
-                    opt_data["default"] = opt_class.default
-                if hasattr(opt_class, "options"):
-                    opt_data["choices"] = opt_class.options
+                    world_options[name] = opt_data
+                except AttributeError:
+                    logging.warning("Skipping option %s (%s)" % (world_name, name))
 
-                world_options[opt_name] = opt_data
+        # TODO: Fallback for worlds using traditional dictionaries
+        else:
+            continue
 
         all_options[world_name] = world_options
 
