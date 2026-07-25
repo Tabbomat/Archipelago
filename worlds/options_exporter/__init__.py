@@ -3,6 +3,7 @@ import logging
 import os
 import types
 
+from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, components
 
 
@@ -23,6 +24,12 @@ class APWorldEncoder(json.JSONEncoder):
             # Ultimate fallback to string representation to prevent crashes
             return str(obj)
 
+class OptionsExporterWorld(World):
+    """Dummy world to allow the options exporter to be packaged as an .apworld."""
+    game = "Options Exporter"
+    hidden = True
+    item_name_to_id = {}
+    location_name_to_id = {}
 
 def export_apworld_options(*args):
     """
