@@ -24,12 +24,14 @@ class APWorldEncoder(json.JSONEncoder):
             # Ultimate fallback to string representation to prevent crashes
             return str(obj)
 
+
 class OptionsExporterWorld(World):
     """Dummy world to allow the options exporter to be packaged as an .apworld."""
     game = "Options Exporter"
     hidden = True
     item_name_to_id = {}
     location_name_to_id = {}
+
 
 def export_apworld_options(*args):
     """
@@ -79,9 +81,20 @@ def export_apworld_options(*args):
                             # Filter out private attributes
                             if key.startswith("_"):
                                 continue
+
                             # Filter out methods etc
-                            if isinstance(value, (types.FunctionType, property, classmethod, staticmethod)):
-                                continue
+                            if isinstance(value, (types.FunctionType, property, classmethod, staticmethod)) \
+                                    or hasattr(value, "__get__") or "classproperty" in type(value).__name__.lower():
+                                # try to get the actual value if possible
+                                # if value is for example a property, this resolves the property to get a primitive value
+                                try:
+                                    resolved = getattr(option, key)
+                                    if callable(resolved) or hasattr(resolved, "__get__"):
+                                        continue
+                                except Exception:
+                                    continue
+                                # continue with other filtering
+                                value = resolved
 
                             # Filter out unnecessary class variables
                             if any(key.startswith(prefix) for prefix in ("option_", "alias_")):
