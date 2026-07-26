@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import types
+from collections.abc import KeysView, ValuesView, ItemsView
 
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, components
@@ -14,7 +15,8 @@ class APWorldEncoder(json.JSONEncoder):
     """
 
     def default(self, obj):
-        if isinstance(obj, (set, frozenset)):
+        # Convert most iterables (but not strings) into lists
+        if isinstance(obj, (set, frozenset, KeysView, ValuesView, ItemsView)):
             return list(obj)
         if hasattr(obj, '__name__'):
             return obj.__name__
