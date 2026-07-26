@@ -5,7 +5,7 @@ import types
 from collections.abc import KeysView, ValuesView, ItemsView
 
 from worlds.AutoWorld import World
-from worlds.LauncherComponents import Component, components
+from worlds.LauncherComponents import Component, components, Type
 
 
 class APWorldEncoder(json.JSONEncoder):
@@ -156,8 +156,8 @@ def export_apworld_options(*args):
 components.append(
     Component(
         display_name="Export APWorld Options",
-        script_name="export_apworld_options",
         func=export_apworld_options,
         description="Export options of all APWorlds",
+        component_type=Type.TOOL
     )
 )
