@@ -115,6 +115,10 @@ def export_apworld_options(*args):
                                     if isinstance(v, tuple) and len(v) == 1 and isinstance(v[0], int):
                                         value[k] = v[0]
 
+                            # sometimes, valid_keys are not proper keys, but the entire dictionary
+                            if key == "valid_keys" and isinstance(value, dict):
+                                value = sorted(value.keys())
+
                             # Only add it if a child class hasn't already overridden it
                             if key not in class_vars:
                                 class_vars[key] = value
