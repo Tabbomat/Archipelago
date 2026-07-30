@@ -45,7 +45,7 @@ def export_apworld_options(*args):
     logging.basicConfig(level=logging.INFO)
     logging.info("Scanning installed APWorlds for options...")
 
-    all_options = {}
+    all_data = {}
 
     # Iterate over all registered worlds
     for world_name, world_class in AutoWorldRegister.world_types.items():
@@ -53,9 +53,16 @@ def export_apworld_options(*args):
             continue
 
         world_options = {}
+        world_groups = []
 
         # New worlds should use dataclasses for defining options
         if hasattr(world_class, "options_dataclass"):
+            # Create a reverse map to easily find option names by their class
+            class_to_name = {
+                opt_class: name
+                for name, opt_class in world_class.options_dataclass.type_hints.items()
+            }
+
             for name, option in world_class.options_dataclass.type_hints.items():
                 try:
                     is_removed = False
@@ -65,6 +72,7 @@ def export_apworld_options(*args):
                     # Skip removed options
                     if mro[0].__name__ == "Removed":
                         continue
+
                     for cls in mro[1:]:  # Skip index 0 (the class itself)
                         if cls.__name__ == "Removed":
                             is_removed = True
@@ -129,21 +137,40 @@ def export_apworld_options(*args):
 
                     # add class variables
                     opt_data.update(class_vars)
-
                     world_options[name] = opt_data
+
                 except AttributeError:
                     logging.warning("Skipping option %s (%s)" % (world_name, name))
 
-        # TODO: Fallback for worlds using traditional dictionaries
+            # Extract option groups
+            if hasattr(world_class, "web") and getattr(world_class.web, "option_groups", None):
+                for group in world_class.web.option_groups:
+                    group_data = {
+                        "name": group.name,
+                        "start_collapsed": getattr(group, "start_collapsed", False),
+                        "options": []
+                    }
+                    # Map the classes in the group back to their dictionary keys
+                    for opt_class in group.options:
+                        if opt_class in class_to_name:
+                            group_data["options"].append(class_to_name[opt_class])
+
+                    world_groups.append(group_data)
+
         else:
+            # TODO: Fallback for worlds using traditional dictionaries (if needed)
             continue
 
-        all_options[world_name] = world_options
+        # Bundle the flat options and the groups together per world
+        all_data[world_name] = {
+            "options": world_options,
+            "option_groups": world_groups
+        }
 
     # Export to a JSON file in the root Archipelago directory
     output_file = os.path.join(os.getcwd(), "apworld_options.json")
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(all_options, f, indent=2, cls=APWorldEncoder)
+        json.dump(all_data, f, indent=2, cls=APWorldEncoder)
 
     logging.info(f"Options successfully exported to: {output_file}")
 
