@@ -48,7 +48,7 @@ def export_apworld_options(*args):
     all_data = {}
 
     # Iterate over all registered worlds
-    for world_name, world_class in AutoWorldRegister.world_types.items():
+    for world_name, world_class in sorted(AutoWorldRegister.world_types.items(), key=lambda item: item[0].casefold()):
         if world_class.hidden:
             continue
 
