@@ -3,6 +3,7 @@ import logging
 import os
 import types
 from collections.abc import KeysView, ValuesView, ItemsView
+from typing import Any
 
 import Utils
 from worlds.AutoWorld import World
@@ -46,7 +47,7 @@ def export_apworld_options(*args):
     logging.basicConfig(level=logging.INFO)
     logging.info("Scanning installed APWorlds for options...")
 
-    all_data = {"_metadata": {
+    all_data: dict[str, dict[str, Any]] = {"_metadata": {
         "ap_version": str(Utils.__version__),
         "exporter_version": "0.0.0"
     }}
@@ -174,8 +175,12 @@ def export_apworld_options(*args):
         # Bundle the flat options and the groups together per world
         all_data[world_name] = {
             "options": world_options,
-            "option_groups": world_groups
+            "option_groups": world_groups,
         }
+
+        world_version = world_class.world_version.as_simple_string()
+        if world_version != "0.0.0":
+            all_data[world_name]["world_version"] = world_version
 
     # Export to a JSON file in the root Archipelago directory
     output_file = os.path.join(os.getcwd(), "apworld_options.json")
