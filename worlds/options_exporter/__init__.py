@@ -4,6 +4,7 @@ import os
 import types
 from collections.abc import KeysView, ValuesView, ItemsView
 
+import Utils
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, components, Type
 
@@ -45,11 +46,16 @@ def export_apworld_options(*args):
     logging.basicConfig(level=logging.INFO)
     logging.info("Scanning installed APWorlds for options...")
 
-    all_data = {}
+    all_data = {"_metadata": {
+        "ap_version": str(Utils.__version__),
+        "exporter_version": "0.0.0"
+    }}
 
     # Iterate over all registered worlds
     for world_name, world_class in sorted(AutoWorldRegister.world_types.items(), key=lambda item: item[0].casefold()):
         if world_class.hidden:
+            if world_name == OptionsExporterWorld.game:
+                all_data["_metadata"]["exporter_version"] = OptionsExporterWorld.world_version.as_simple_string()
             continue
 
         world_options = {}
