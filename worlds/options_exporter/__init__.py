@@ -19,7 +19,7 @@ class APWorldEncoder(json.JSONEncoder):
     def default(self, obj):
         # Convert most iterables (but not strings) into lists
         if isinstance(obj, (set, frozenset, KeysView, ValuesView, ItemsView)):
-            return list(obj)
+            return sorted(obj)
         if hasattr(obj, '__name__'):
             return obj.__name__
         try:
