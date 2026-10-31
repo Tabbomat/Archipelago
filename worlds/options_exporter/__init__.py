@@ -143,6 +143,7 @@ def export_apworld_options(*args):
                     opt_data = {
                         "name": getattr(option, "display_name", name),
                         "description": option.__doc__.strip(),
+                        "class_name": mro[0].__name__,
                         "parent_classes": parent_classes
                     }
 
