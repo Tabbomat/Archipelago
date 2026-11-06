@@ -174,7 +174,12 @@ def export_apworld_options(*args):
             continue
 
         # Bundle the flat options and the groups together per world
+        module_parts = world_class.__module__.split(".")
         all_data[world_name] = {
+            # module name below "worlds." (== top-level folder inside the .apworld)
+            "world_id": module_parts[1] if module_parts[0] == "worlds" and len(module_parts) > 1 else module_parts[0],
+            # absolute path of the .apworld, None for worlds loaded from a folder
+            "zip_path": str(world_class.zip_path.resolve()) if world_class.zip_path else None,
             "options": world_options,
             "option_groups": world_groups,
         }
